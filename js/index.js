@@ -81,6 +81,42 @@ function gameEngine() {
     document.getElementById("board").appendChild(foodElement);
 }
 
+// Prevent Scrolling on Mobile (≤ 600px)
+if (window.innerWidth <= 600) {
+    document.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+}
+
+// Touch Controls for Mobile
+let touchStartX = 0, touchStartY = 0;
+let touchEndX = 0, touchEndY = 0;
+
+function handleGesture() {
+    let dx = touchEndX - touchStartX;
+    let dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 50) inputDir = { x: 1, y: 0 }; // Right Swipe
+        else if (dx < -50) inputDir = { x: -1, y: 0 }; // Left Swipe
+    } else {
+        if (dy > 50) inputDir = { x: 0, y: 1 }; // Down Swipe
+        else if (dy < -50) inputDir = { x: 0, y: -1 }; // Up Swipe
+    }
+}
+
+// Activate only on small screens (max-width: 600px)
+if (window.innerWidth <= 600) {
+    document.addEventListener("touchstart", e => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    });
+
+    document.addEventListener("touchend", e => {
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+        handleGesture();
+    });
+}
+
 // Keyboard Controls Only
 window.addEventListener('keydown', e => {
     moveSound.play();
@@ -89,5 +125,26 @@ window.addEventListener('keydown', e => {
     if (e.key === "ArrowLeft") inputDir = {x: -1, y: 0};
     if (e.key === "ArrowRight") inputDir = {x: 1, y: 0};
 });
+
+
+//Reset the hiscore in mobile view
+let resetTimeout; // Variable to store the timeout function
+const hiscoreBox = document.getElementById("hiscoreBox");
+
+hiscoreBox.addEventListener("touchstart", () => {
+    // Start a timer when the user touches the HiScore box
+    resetTimeout = setTimeout(() => {
+        localStorage.removeItem("hiscore"); // Clear stored HiScore
+        hiscoreval = 0; // Reset HiScore variable
+        hiscoreBox.innerHTML = "HiScore: 0"; // Update UI
+        alert("HiScore has been reset!"); // Notify user
+    }, 2000); // 2-second delay
+});
+
+hiscoreBox.addEventListener("touchend", () => {
+    // If the user lifts their finger before 2 seconds, cancel the reset
+    clearTimeout(resetTimeout);
+});
+
 
 window.requestAnimationFrame(main);
